@@ -354,12 +354,17 @@ function receiptExecutionError(receipt, label){
 }
 function txReturnString(receipt){
   // analyze() returns the report_id string — extract from the leader
-  // receipt payload (readable calldata return).
+  // receipt payload (readable calldata return). The readable form is
+  // JSON-quoted ('"1:0x…:9"') — strip the surrounding quotes.
   try {
     const lead = Array.isArray(receipt?.consensus_data?.leader_receipt)
       ? receipt.consensus_data.leader_receipt[0] : null;
     const payload = lead?.result?.payload;
-    if (payload && typeof payload.readable === 'string') return payload.readable;
+    if (payload && typeof payload.readable === 'string'){
+      let s = payload.readable.trim();
+      if (s.length >= 2 && s[0] === '"' && s[s.length-1] === '"') s = s.slice(1, -1);
+      return s;
+    }
   } catch {}
   return null;
 }
@@ -528,7 +533,12 @@ el.btn.addEventListener('click', async () => {
     let rid = txReturnString(receipt);
     let rep = null;
     if (rid){ try { rep = await readReportById(rid); } catch { rep = null; } }
+    if (rep && rep.error) rep = null;            // {"error":"not_found"} → fall through
     if (!rep){ rep = await readReportFor(v.chain, v.addr); rid = rep.report_id; }
+    if (rep.error){
+      throw new Error('Consensus committed but the report could not be read back'
+        + (rep.error === 'not_found' ? ' (report not found)' : ' (' + rep.error + ')') + '.');
+    }
     renderReport(rep, txHash);
     setStatus('ok','Analysis stored on-chain. Report <span class="mono">'+esc(rid)+'</span> is now the latest for this target.');
   } catch (e){
