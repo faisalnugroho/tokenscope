@@ -388,7 +388,10 @@ async function sendWrite(fn, args, label){
     ]);
   } catch (e){
     const msg = String(e.message || e);
-    if (!/TX_FINAL_WAIT_TIMEOUT/.test(msg)) throw e;
+    // Both our own race-timeout AND the SDK's internal wait-timeout
+    // (slow COMMITTING phase) fall back to polling — never give up on
+    // a tx that is still moving through consensus.
+    if (!/TX_FINAL_WAIT_TIMEOUT|timed? ?out waiting for transaction/i.test(msg)) throw e;
     setStatus('busy', 'Receipt wait timed out — polling the transaction until FINALIZED…');
     const deadline = Date.now() + TX_FINAL_WAIT_MS;
     while (Date.now() < deadline){
