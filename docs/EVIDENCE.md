@@ -104,6 +104,36 @@ Equivalence Principle genuinely rejects non-reproducible classifications
 fix was to make the analysis *reproducible*, not to weaken the
 comparison.
 
+## dApp write-path verification (2026-09-11, post-deploy)
+
+The browser dApp (GitHub Pages) was exercised end-to-end with its own
+auto-generated burner wallet (`0xEEd59c32B3c67E29631da6b620653d7B430BEDC1`,
+funded via `sim_fundAccount`), not the deployer key:
+
+| Target | tx | Votes | Consensus | Result |
+|---|---|---|---|---|
+| USDT (chain 1) | `0x01823bd962aa422840c76d3792d17670861bb59850c4d1f9b98b469e33502bf9` | 3 agree / 0 disagree / 2 idle | MAJORITY_AGREE + SUCCESS | report `1:0xdac…31ec7:9` stored; requester = burner; rendered 18-capability matrix in browser |
+| UNI (chain 1) | `0x48f1991487dcd6013e7ef26d6f6f2e0ce14e81927c2efba87145bc58545177c3` | 3 agree / 2 disagree | MAJORITY_AGREE + SUCCESS | report `1:0x1f9…1f984:2` stored; requester = burner; rendered 18-capability matrix in browser |
+
+The UNI commit again passed 3-2 (same boundary-capability disagreement
+pattern as S2b — disclosed above). A read-back via the "Load latest
+report" path returned the stored report with no new transaction.
+
+**Two dApp bugs found and fixed during this verification (commits
+`11aaaf6`, `ed4d514`):**
+
+1. A tx can be FINALIZED with `MAJORITY_DISAGREE`/`NO_MAJORITY` —
+   nothing is committed, but the old dApp fell through to reading the
+   previous report and rendered it as success. The earlier burner tx
+   `0x95c703a332c3f1333d0e14956956dd77c25c16aaa7ece8687be0cd0a171e0df1`
+   (DAI) hit exactly this path: 3 disagree, nothing committed, stale
+   report displayed as a fresh success. The dApp now checks
+   `result_name` and surfaces "nothing was committed — retry".
+2. The leader's readable return is JSON-quoted (`"1:0x…:9"`); the old
+   reader passed the quoted string to `get_report`, got
+   `{"error":"not_found"}`, and rendered that error object as an empty
+   report. Quotes are now stripped and error objects are rejected.
+
 ## Deployed-code byte identity
 
 The final contract was deployed from `contracts/token_scope.py`
