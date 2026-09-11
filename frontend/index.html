@@ -363,6 +363,13 @@ function txReturnString(receipt){
   } catch {}
   return null;
 }
+function txOutcome(receipt){
+  // FINALIZED alone does not mean anything was committed: a tx can be
+  // FINALIZED with NO_MAJORITY / MAJORITY_DISAGREE / MAJORITY_AGREE.
+  // Only MAJORITY_AGREE (optionally with leader SUCCESS) commits state.
+  const outcome = String(receipt?.result_name || '').toUpperCase();
+  return { outcome, committed: outcome === 'MAJORITY_AGREE' };
+}
 async function sendWrite(fn, args, label){
   const w = await fundIfNeeded();
   const txHash = await client.writeContract({
@@ -390,6 +397,12 @@ async function sendWrite(fn, args, label){
   }
   const execErr = receiptExecutionError(receipt, label);
   if (execErr) throw execErr;
+  const { outcome, committed } = txOutcome(receipt);
+  if (!committed){
+    throw new Error(label + ' reached consensus status FINALIZED but the validators did not agree ('
+      + (outcome || 'NO_MAJORITY') + ') — nothing was committed. '
+      + 'Semantic consensus can occasionally miss on borderline artifacts; please retry the analysis.');
+  }
   return { txHash, receipt };
 }
 
@@ -520,7 +533,7 @@ el.btn.addEventListener('click', async () => {
     setStatus('ok','Analysis stored on-chain. Report <span class="mono">'+esc(rid)+'</span> is now the latest for this target.');
   } catch (e){
     const msg = String(e.message || e);
-    setStatus('err', 'Analysis failed: '+esc(msg) + (msg.includes('consensus status') ? ' — no state was committed.' : ''));
+    setStatus('err', 'Analysis failed: '+esc(msg) + (msg.includes('consensus status') && !msg.includes('committed') ? ' — no state was committed.' : ''));
   } finally {
     el.btn.disabled = false;
   }
