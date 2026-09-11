@@ -212,6 +212,7 @@ footer a:hover{color:var(--gen2)}
 'use strict';
 
 const CONTRACT = window.TOKENSCOPE_CONTRACT;
+function sdk(){ return window.GenLayerSDK; }
 const RPC = 'https://studio.genlayer.com/api';
 const EXPLORER = 'https://explorer-studio.genlayer.com';
 const EXPLORER_TX = EXPLORER + '/tx/';
@@ -242,7 +243,7 @@ async function initClient(){
   let lastErr = null;
   for (let attempt = 1; attempt <= 4; attempt++){
     try {
-      client = SDK.createClient({ chain: SDK.studionet });
+      client = sdk().createClient({ chain: sdk().studionet });
       const info = await client.readContract({
         address: CONTRACT, functionName: 'get_contract_info', args: [] });
       const d = JSON.parse(info);
@@ -270,7 +271,7 @@ function loadWallet(){
     if (!raw) return null;
     const d = JSON.parse(raw);
     if (!d || !d.pk) return null;
-    const account = SDK.createAccount(d.pk);
+    const account = sdk().createAccount(d.pk);
     return { pk: d.pk, address: account.address, account };
   } catch { return null; }
 }
@@ -278,8 +279,8 @@ function ensureWallet(){
   if (wallet) return wallet;
   wallet = loadWallet();
   if (!wallet){
-    const pk = SDK.generatePrivateKey();
-    const account = SDK.createAccount(pk);
+    const pk = sdk().generatePrivateKey();
+    const account = sdk().createAccount(pk);
     wallet = { pk, address: account.address, account };
     localStorage.setItem(WKEY, JSON.stringify({ pk }));
   }
@@ -370,7 +371,7 @@ async function sendWrite(fn, args, label){
   let receipt = null;
   try {
     receipt = await Promise.race([
-      client.waitForTransactionReceipt({ hash: txHash, status: SDK.TransactionStatus.FINALIZED, interval: 5000, retries: 80 }),
+      client.waitForTransactionReceipt({ hash: txHash, status: sdk().TransactionStatus.FINALIZED, interval: 5000, retries: 80 }),
       new Promise((_, rej) => setTimeout(() => rej(new Error('TX_FINAL_WAIT_TIMEOUT')), TX_FINAL_WAIT_MS)),
     ]);
   } catch (e){
@@ -564,10 +565,10 @@ document.querySelectorAll('.chip').forEach(ch => {
   renderWallet(false);
   // The SDK bundle may finish loading after this inline script; wait
   // for it (bounded) before initializing the client.
-  for (let i = 0; i < 100 && typeof SDK === 'undefined'; i++){
+  for (let i = 0; i < 100 && typeof window.GenLayerSDK === 'undefined'; i++){
     await new Promise(r => setTimeout(r, 100));
   }
-  if (typeof SDK === 'undefined'){
+  if (typeof window.GenLayerSDK === 'undefined'){
     el.net.classList.add('err');
     el.net.textContent = 'GenLayer SDK failed to load';
     return;
