@@ -251,12 +251,14 @@ async function initClient(){
       return;
     } catch (e){
       lastErr = e;
+      window.__tsInitErr = String(e && e.message || e);
       console.warn('initClient attempt ' + attempt + ' failed', e);
       await new Promise(r => setTimeout(r, 1500 * attempt));
     }
   }
   el.net.classList.add('err');
   el.net.textContent = 'network unreachable — reads still possible when connection returns';
+  el.net.title = window.__tsInitErr || '';
   console.warn('initClient gave up', lastErr);
 }
 
