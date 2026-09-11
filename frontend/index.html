@@ -239,18 +239,25 @@ let wallet = null;   // { pk, address, account }
 async function initClient(){
   el.net.classList.remove('err');
   el.net.textContent = 'connecting to Studionet…';
-  try {
-    client = SDK.createClient({ chain: SDK.studionet });
-    const info = await client.readContract({
-      address: CONTRACT, functionName: 'get_contract_info', args: [] });
-    const d = JSON.parse(info);
-    if (d.name !== 'TokenScope') throw new Error('unexpected contract at address');
-    el.net.textContent = 'Studionet · connected · taxonomy v' + (d.taxonomy_version || '1.0');
-  } catch (e){
-    el.net.classList.add('err');
-    el.net.textContent = 'network unreachable';
-    console.warn('initClient failed', e);
+  let lastErr = null;
+  for (let attempt = 1; attempt <= 4; attempt++){
+    try {
+      client = SDK.createClient({ chain: SDK.studionet });
+      const info = await client.readContract({
+        address: CONTRACT, functionName: 'get_contract_info', args: [] });
+      const d = JSON.parse(info);
+      if (d.name !== 'TokenScope') throw new Error('unexpected contract at address');
+      el.net.textContent = 'Studionet · connected · taxonomy v' + (d.taxonomy_version || '1.0');
+      return;
+    } catch (e){
+      lastErr = e;
+      console.warn('initClient attempt ' + attempt + ' failed', e);
+      await new Promise(r => setTimeout(r, 1500 * attempt));
+    }
   }
+  el.net.classList.add('err');
+  el.net.textContent = 'network unreachable — reads still possible when connection returns';
+  console.warn('initClient gave up', lastErr);
 }
 
 /* ---------- wallet (burner, localStorage) ---------- */
@@ -495,6 +502,7 @@ function renderReport(rep, txHash){
 el.btn.addEventListener('click', async () => {
   const v = validateInputs();
   if (!v){ setStatus('err', 'Please enter a valid chain ID (e.g. 1) and a 0x… 40-hex contract address.'); return; }
+  if (!client){ await initClient(); }
   if (!client){ setStatus('err','Network unreachable — please retry.'); return; }
   el.btn.disabled = true;
   try {
@@ -518,6 +526,7 @@ el.btn.addEventListener('click', async () => {
 el.latest.addEventListener('click', async () => {
   const v = validateInputs();
   if (!v){ setStatus('err','Enter a valid chain ID and address first.'); return; }
+  if (!client){ await initClient(); }
   if (!client){ setStatus('err','Network unreachable — please retry.'); return; }
   el.latest.disabled = true;
   try {
