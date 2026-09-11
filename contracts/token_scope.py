@@ -933,14 +933,25 @@ _CAP_DOCS = {
         "token supply can be destroyed, either by holders "
         "(burn/burnFrom) or by a privileged party",
     "supply_cap":
-        "evidence of a hard maximum supply enforced by the code "
-        "(capped supply with no privileged path past the cap)",
+        "the code enforces a maximum total supply that privileged "
+        "parties cannot exceed. COUNTS: fixed constructor supply with "
+        "no mint path (supply is permanently immutable); a cap check "
+        "enforced inside every mint path. DOES NOT COUNT: a cap "
+        "constant or comment that mint paths ignore; a mint path with "
+        "no cap check (classify NOT_DETECTED); owner-discretionary "
+        "limits that are not hard caps.",
     "pause":
         "transfers can be paused/unpaused or frozen by a privileged "
         "party",
     "blacklist":
-        "addresses can be blacklisted/blocked from transferring "
-        "(blocklist enforced in transfer paths)",
+        "a privileged party can block addresses from transferring, "
+        "with the block ENFORCED inside transfer/transferFrom logic "
+        "(revert or skip when listed). A list mapping that exists but "
+        "is provably not consulted by any transfer path is NOT a "
+        "blacklist (classify NOT_DETECTED); a list whose enforcement "
+        "link is unclear or indirect classifies UNCERTAIN. Blocked-"
+        "balance seizure is the separate burn/forced_transfer "
+        "judgment, not this one.",
     "whitelist":
         "an allowlist gates transfers: non-listed addresses cannot "
         "transfer",
@@ -951,14 +962,31 @@ _CAP_DOCS = {
         "transfer/buy/sell fees exist and their rate, recipient, or "
         "on/off state can be changed by a privileged party",
     "upgradeability":
-        "proxy upgradeability exists: the implementation can be "
-        "replaced (UUPS, transparent, or beacon style)",
+        "the contract's own logic can be replaced in place through a "
+        "proxy mechanism (UUPS/transparent/beacon: upgradeTo, "
+        "upgradeToAndCall, beacon address change, or delegatecall to a "
+        "swappable implementation). MERE DEPRECATION OR MIGRATION "
+        "POINTERS DO NOT COUNT: a function that records a new address "
+        "users may voluntarily interact with (e.g. deprecate() "
+        "setting an upgradedAddress that users must migrate to "
+        "themselves) is NOT upgradeability — classify NOT_DETECTED. "
+        "Only an in-place swap where existing users are automatically "
+        "served the new logic counts.",
     "upgrade_admin":
-        "a specific privileged role can perform upgrades (proxy admin, "
-        "UPGRADER role, etc.)",
+        "a specific privileged role can perform in-place proxy "
+        "upgrades (upgradeTo and equivalents, proxy admin, UPGRADER "
+        "role). Deprecation-style migration setters do not count — "
+        "classify NOT_DETECTED when only a migration address is "
+        "recorded.",
     "balance_override":
-        "a privileged party can set arbitrary address balances "
-        "directly (balance mapping assignment or equivalent)",
+        "a privileged function can SET an arbitrary address's balance "
+        "to an arbitrary value (direct assignment balances[x]=v, "
+        "setBalance-style). DOES NOT COUNT: privileged burns "
+        "(subtract-only, e.g. destroying a blacklisted address's "
+        "balance — that is burn/forced_transfer territory, classify "
+        "balance_override NOT_DETECTED), privileged mints (add-only), "
+        "or ordinary transfer bookkeeping. Only unrestricted "
+        "set-both-directions balance mutation counts.",
     "rescue_assets":
         "a privileged party can rescue or sweep arbitrary tokens or "
         "other assets held by the contract",

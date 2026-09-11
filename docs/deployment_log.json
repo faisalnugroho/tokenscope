@@ -1,0 +1,100 @@
+{
+  "final_contract": {
+    "address": "0xb99689391dEC3322911cf06aE2697D7047D42bF6",
+    "code_sha256": "37216077dac9623c0265977c18112d56fa41385f06c154fb163986b79ba2d12e",
+    "deploy_tx": "0x6981b7cb4940736a65a3976bc85d8ce441d60966c4f6886d33e211552ae138a2",
+    "byte_identity": {
+      "verified": true,
+      "method": "sha256(b64decode(deploy_tx.data.contract_code)) == sha256(contracts/token_scope.py)",
+      "deployed_bytes": 43016,
+      "sha256": "37216077dac9623c0265977c18112d56fa41385f06c154fb163986b79ba2d12e"
+    }
+  },
+  "cases": [
+    {
+      "name": "S2-positive-usdt",
+      "tx": "0x73106499203d7667b10d17ffc5bd384e9ae1adc0024c8e1c705bc7c5b93ebfbf",
+      "report_id": "1:0xdac17f958d2ee523a2206206994597c13d831ec7:6",
+      "source_status": "PARTIAL_MATCH",
+      "analysis_status": "COMPLETE",
+      "detected": [
+        "blacklist",
+        "burn",
+        "fee_control",
+        "mint",
+        "ownership_detected",
+        "ownership_transferable",
+        "pause"
+      ],
+      "capabilities": {
+        "ownership_detected": "DETECTED",
+        "ownership_transferable": "DETECTED",
+        "ownership_renounceable": "NOT_DETECTED",
+        "role_based_admin": "NOT_DETECTED",
+        "mint": "DETECTED",
+        "burn": "DETECTED",
+        "supply_cap": "NOT_DETECTED",
+        "pause": "DETECTED",
+        "blacklist": "DETECTED",
+        "whitelist": "NOT_DETECTED",
+        "forced_transfer": "NOT_DETECTED",
+        "fee_control": "DETECTED",
+        "upgradeability": "NOT_DETECTED",
+        "upgrade_admin": "NOT_DETECTED",
+        "balance_override": "NOT_DETECTED",
+        "rescue_assets": "NOT_DETECTED",
+        "eth_withdraw": "NOT_DETECTED",
+        "arbitrary_allowance_edit": "NOT_DETECTED"
+      },
+      "vote_detail": "3 agree / 0 disagree / 2 idle"
+    },
+    {
+      "name": "S2b-positive-uni",
+      "tx": "0xbbb4ace7be0568dd3d2b91c19b095a05598046ff0ffdc36709b78f40869d60ff",
+      "report_id": "1:0x1f9840a85d5af5bf1d1762f925bdaddc4201f984:1",
+      "source_status": "PARTIAL_MATCH",
+      "analysis_status": "COMPLETE",
+      "detected": [
+        "mint",
+        "ownership_detected",
+        "ownership_renounceable",
+        "ownership_transferable",
+        "supply_cap"
+      ],
+      "vote_detail": "3 agree / 2 disagree / 0 idle"
+    },
+    {
+      "name": "S3-negative-unverified",
+      "tx": "0xd5b83835a86c314a96c03b035539f3a3c765ca1ae35e427ae50c89b7956a2483",
+      "report_id": "1:0x0000000000000000000000000000000000000001:1",
+      "failure": {
+        "stage": "VERIFICATION",
+        "error_code": "NOT_VERIFIED"
+      },
+      "vote_detail": "3 agree / 0 disagree / 2 idle"
+    },
+    {
+      "name": "S4-negative-malformed",
+      "tx": "0xb495a0fa6f608331949ede326086a1d5926e5534408f921fb5bbb86c5700a6e6",
+      "report_id": "1::1",
+      "failure": {
+        "stage": "REQUEST",
+        "error_code": "invalid_address"
+      },
+      "vote_detail": "3 agree / 0 disagree / 2 idle"
+    },
+    {
+      "name": "S5-determinism",
+      "tx": "0x08cab99b7ef205912b50584df7391c3b6145f4249a2bdcbe217ec622f0d9ebc0",
+      "report_id": "1:0xdac17f958d2ee523a2206206994597c13d831ec7:7",
+      "identical_capability_matrix": true,
+      "vote_detail": "3 agree / 0 disagree / 2 idle"
+    }
+  ],
+  "history": [],
+  "getters": {
+    "analysis_count": "10",
+    "usdt_history": "[\"1:0xdac17f958d2ee523a2206206994597c13d831ec7:3\", \"1:0xdac17f958d2ee523a2206206994597c13d831ec7:4\", \"1:0xdac17f958d2ee523a2206206994597c13d831ec7:5\", \"1:0xdac17f958d2ee523a2206206994597c13d831ec7:6\", \"1:0xdac17f958d2ee523a2206206994597c13d831ec7:7\"]"
+  },
+  "vote_count_note": "Votes re-derived via raw RPC eth_getTransactionByHash on 2026-09-11. 'idle' validators are normal quorum-reached cancellations. S2b (UNI) passed 3-2: two validators disagreed on boundary capabilities (UNI's mint() exists in source while its minter role was renounced to the zero address; supply fixed at construction) \u2014 majority agreed and the tx committed; disclosed honestly in docs/EVIDENCE.md."
+}

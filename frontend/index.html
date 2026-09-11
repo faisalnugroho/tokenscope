@@ -1,0 +1,558 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TokenScope — Semantic Smart-Contract Capability Oracle</title>
+<meta name="description" content="TokenScope translates verified smart-contract artifacts (Sourcify) into a structured, consensus-backed capability profile via GenLayer Intelligent Contract consensus. Not a security audit.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080B14; --bg2:#0D1220; --panel:#101728; --panel2:#141D33;
+  --line:#1E2A45; --line2:#273554; --ink:#E8EDF7; --muted:#8A97B4;
+  --muted2:#5E6B88; --gen:#6E8BFF; --gen2:#8AA4FF; --gen-dim:#39466F;
+  --ok:#34D399; --ok-bg:rgba(52,211,153,.12);
+  --nd:#94A3B8; --nd-bg:rgba(148,163,184,.12);
+  --unc:#FBBF24; --unc-bg:rgba(251,191,36,.12);
+  --una:#F87171; --una-bg:rgba(248,113,113,.12);
+  --cyan:#22D3EE;
+}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+::selection{background:var(--gen-dim)}
+header{position:sticky;top:0;z-index:40;background:rgba(8,11,20,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
+.brand .mark{width:30px;height:30px;border-radius:8px;flex:none;background:linear-gradient(135deg,var(--gen) 0%,var(--cyan) 100%);display:grid;place-items:center;font-size:15px;color:#05070D;font-weight:700}
+.brand .word{font-weight:700;font-size:17px;letter-spacing:-.01em}
+.brand .word span{color:var(--gen)}
+.netbadge{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);white-space:nowrap}
+.netbadge.err{color:var(--una)}
+.hero{padding:56px 0 26px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:-40% -20% auto;height:130%;pointer-events:none;background:radial-gradient(600px 300px at 18% 0%, rgba(110,139,255,.14), transparent 65%),radial-gradient(500px 260px at 85% 10%, rgba(34,211,238,.10), transparent 60%)}
+.hero>.wrap{position:relative}
+.kicker{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gen2);margin-bottom:14px}
+h1{font-size:clamp(28px,4.6vw,44px);line-height:1.12;letter-spacing:-.02em;font-weight:700;max-width:820px}
+h1 span{color:var(--gen)}
+.sub{margin-top:16px;color:var(--muted);font-size:16.5px;max-width:760px}
+.sub b{color:var(--ink);font-weight:600}
+.notice{margin-top:18px;display:flex;gap:10px;align-items:flex-start;background:var(--una-bg);border:1px solid rgba(248,113,113,.35);border-radius:10px;padding:12px 14px;max-width:760px;font-size:13.5px;color:#FCA5A5}
+.notice b{color:#FECACA}
+main{padding:34px 0 80px}
+.grid{display:grid;grid-template-columns:minmax(340px,5fr) minmax(300px,4fr);gap:22px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px}
+.card h2{font-size:15px;font-weight:600;letter-spacing:.02em;margin-bottom:4px}
+.card .hint{color:var(--muted2);font-size:12.5px;margin-bottom:16px}
+label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin:14px 0 6px}
+input[type=text]{width:100%;background:var(--bg2);border:1px solid var(--line2);border-radius:9px;color:var(--ink);font-family:'IBM Plex Mono',monospace;font-size:13.5px;padding:11px 12px;outline:none;transition:border-color .15s}
+input[type=text]:focus{border-color:var(--gen)}
+input.invalid{border-color:var(--una)}
+button.btn{width:100%;margin-top:18px;background:linear-gradient(135deg,var(--gen) 0%,#5D7BF4 100%);border:none;border-radius:10px;color:#060913;font-weight:700;font-size:14.5px;padding:12px;cursor:pointer;transition:filter .15s,opacity .15s}
+button.btn:hover{filter:brightness(1.08)}
+button.btn:disabled{opacity:.45;cursor:not-allowed}
+button.ghost{width:100%;margin-top:10px;background:transparent;border:1px solid var(--line2);border-radius:10px;color:var(--muted);font-weight:500;font-size:13px;padding:9px;cursor:pointer}
+button.ghost:hover{color:var(--ink);border-color:var(--gen-dim)}
+.examples{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--panel2);border:1px solid var(--line2);border-radius:99px;color:var(--muted);font-size:11.5px;font-family:'IBM Plex Mono',monospace;padding:5px 11px;cursor:pointer;transition:all .15s}
+.chip:hover{color:var(--gen2);border-color:var(--gen-dim)}
+.walletbox{margin-top:20px;border-top:1px dashed var(--line2);padding-top:16px}
+.wrow{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.waddr{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--gen2)}
+.wdot{width:7px;height:7px;border-radius:99px;background:var(--ok);flex:none}
+.wdot.off{background:var(--muted2)}
+.status{margin-top:14px;border-radius:10px;padding:11px 13px;font-size:13px;display:none;border:1px solid var(--line2);background:var(--bg2);color:var(--muted);word-break:break-word}
+.status.show{display:block}
+.status.busy{border-color:rgba(110,139,255,.4);color:var(--gen2)}
+.status.ok{border-color:rgba(52,211,153,.4);color:var(--ok)}
+.status.err{border-color:rgba(248,113,113,.4);color:var(--una)}
+.status a{color:var(--gen2)}
+/* capability matrix */
+.badge{display:inline-flex;align-items:center;gap:6px;border-radius:7px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;letter-spacing:.04em;padding:3px 8px;white-space:nowrap}
+.badge::before{content:'';width:6px;height:6px;border-radius:99px;background:currentColor}
+.b-det{color:var(--ok);background:var(--ok-bg)}
+.b-nd{color:var(--nd);background:var(--nd-bg)}
+.b-unc{color:var(--unc);background:var(--unc-bg)}
+.b-una{color:var(--una);background:var(--una-bg)}
+.capgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px;margin-top:8px}
+.cap{background:var(--bg2);border:1px solid var(--line);border-radius:9px;padding:9px 11px}
+.cap .row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.cap .id{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink);word-break:break-all}
+.cap .why{margin-top:5px;font-size:11.5px;color:var(--muted2);line-height:1.45}
+.cap .ev{margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--cyan);word-break:break-all}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin:6px 0 10px;font-size:11.5px;color:var(--muted2)}
+.summary{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.sumbox{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;min-width:130px}
+.sumbox .k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);font-weight:600}
+.sumbox .v{font-family:'IBM Plex Mono',monospace;font-size:14px;margin-top:3px;font-weight:600}
+.meta-row{display:flex;gap:6px 18px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:6px}
+.meta-row a{color:var(--gen2);text-decoration:none}
+.meta-row a:hover{text-decoration:underline}
+.mono{font-family:'IBM Plex Mono',monospace}
+details.evd{border:1px solid var(--line);border-radius:10px;background:var(--bg2);padding:0;margin-top:10px}
+details.evd summary{cursor:pointer;padding:11px 13px;font-size:13px;font-weight:600;color:var(--ink);user-select:none}
+details.evd .inner{padding:0 13px 13px;font-size:12.5px;color:var(--muted)}
+.expl{font-size:11.5px;color:var(--muted2);margin-top:6px}
+.fail{background:var(--una-bg);border:1px solid rgba(248,113,113,.35);border-radius:10px;padding:12px 14px;font-size:13px;color:#FCA5A5;margin-top:8px;word-break:break-word}
+footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--muted2);font-size:12.5px}
+footer .cols{display:flex;gap:30px;flex-wrap:wrap;justify-content:space-between}
+footer a{color:var(--muted);text-decoration:none}
+footer a:hover{color:var(--gen2)}
+.hidden{display:none!important}
+#resultCard{min-height:120px}
+.placeholder{color:var(--muted2);font-size:13.5px;padding:26px 8px;text-align:center}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="#">
+      <div class="mark">T</div>
+      <div class="word">Token<span>Scope</span></div>
+    </a>
+    <div style="display:flex;gap:12px;align-items:center">
+      <span class="netbadge" id="netbadge">checking network…</span>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="kicker">GenLayer Intelligent Contract · Sourcify v2 · Consensus-Backed</div>
+    <h1>Translate verified smart contracts into a <span>capability profile</span> other apps can consume.</h1>
+    <p class="sub">TokenScope retrieves a contract's <b>verified artifacts</b> from the public Sourcify API v2 and uses <b>GenLayer's decentralized AI-validator consensus</b> to answer one question: <b>what administrative and control capabilities does the verified source actually expose?</b></p>
+    <div class="notice">
+      <span>⚠️</span>
+      <div><b>TokenScope is not a security audit.</b> It analyzes verified contract artifacts and identifies observable capabilities. It does not certify contract safety and cannot guarantee that hidden, unverified, off-chain, or indirect behavior does not exist. <b>NOT DETECTED</b> means "not evidenced in the analyzed artifacts" — never "impossible".</div>
+    </div>
+  </div>
+</section>
+
+<main>
+  <div class="wrap grid">
+
+    <!-- ============ left: input ============ -->
+    <div class="card" id="inputCard">
+      <h2>Analyze a contract</h2>
+      <div class="hint">Public oracle — anyone can request an analysis. Each request is a real GenLayer consensus transaction.</div>
+
+      <label for="chainInput">EVM chain ID</label>
+      <input type="text" id="chainInput" placeholder="e.g. 1 (Ethereum), 137 (Polygon), 8453 (Base)" autocomplete="off" spellcheck="false">
+      <label for="addrInput">Contract address</label>
+      <input type="text" id="addrInput" placeholder="0x… (40 hex characters)" autocomplete="off" spellcheck="false">
+
+      <div class="examples" id="examples">
+        <span class="chip" data-chain="1" data-addr="0xdAC17F958D2ee523a2206206994597C13D831ec7">USDT · chain 1</span>
+        <span class="chip" data-chain="1" data-addr="0x1f9840a85d5aF5bf1d1762F925BDADdC4201F984">UNI · chain 1</span>
+        <span class="chip" data-chain="137" data-addr="0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359">POL · chain 137</span>
+      </div>
+
+      <button class="btn" id="analyzeBtn">Analyze capabilities</button>
+      <button class="ghost" id="loadLatestBtn">Load latest report for this target</button>
+
+      <div class="walletbox">
+        <div class="wrow">
+          <span class="wdot off" id="wdot"></span>
+          <span id="walletLabel">No burner wallet — created on first analysis</span>
+          <span class="waddr" id="walletAddr"></span>
+        </div>
+      </div>
+
+      <div class="status" id="status"></div>
+    </div>
+
+    <!-- ============ right: result ============ -->
+    <div class="card" id="resultCard">
+      <div class="placeholder" id="resultPlaceholder">No report yet — enter a target and run an analysis, or load the latest report.</div>
+      <div class="hidden" id="resultBody"></div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <div class="wrap cols">
+    <div>
+      <div style="font-weight:600;color:var(--muted);margin-bottom:6px">TokenScope</div>
+      <div>Semantic capability oracle · taxonomy v1.0 · schema v1.0</div>
+      <div style="margin-top:8px">Contract: <a id="contractLink" href="#" target="_blank" rel="noopener" class="mono" style="font-size:11.5px"></a></div>
+    </div>
+    <div>
+      <div style="margin-bottom:6px"><a href="https://github.com/faisalnugroho/tokenscope" target="_blank" rel="noopener">Source &amp; evidence</a></div>
+      <div><a href="https://sourcify.dev" target="_blank" rel="noopener">Data source: Sourcify v2 (public, keyless)</a></div>
+      <div><a href="https://docs.genlayer.com" target="_blank" rel="noopener">Powered by GenLayer consensus</a></div>
+    </div>
+    <div style="max-width:340px">
+      <div style="margin-bottom:6px;color:var(--muted)">Status vocabulary</div>
+      <div style="font-size:11.5px;color:var(--muted2)">
+        <b style="color:var(--ok)">DETECTED</b> — evidenced in the analyzed artifacts ·
+        <b style="color:var(--nd)">NOT_DETECTED</b> — no sufficient evidence (not "impossible") ·
+        <b style="color:var(--unc)">UNCERTAIN</b> — evidence insufficient/ambiguous ·
+        <b style="color:var(--una)">UNAVAILABLE</b> — analysis could not complete
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="./genlayer-sdk.bundle.js"></script>
+<script src="./contract-address.js"></script>
+<script>
+/* ============================================================
+   TokenScope dApp — single-page, burner-wallet, full tx lifecycle.
+   No API keys. All classification happens on-chain in GenLayer
+   consensus; this page only submits the request and renders the
+   stored report.
+   ============================================================ */
+'use strict';
+
+const CONTRACT = window.TOKENSCOPE_CONTRACT;
+const RPC = 'https://studio.genlayer.com/api';
+const EXPLORER = 'https://explorer-studio.genlayer.com';
+const EXPLORER_TX = EXPLORER + '/tx/';
+const EXPLORER_CONTRACT = EXPLORER + '/contracts/';
+const SOURCIFY_LINK = (c, a) => 'https://sourcify.dev/server/v2/contract/' + c + '/' + a;
+
+const $ = id => document.getElementById(id);
+const el = {
+  chain: $('chainInput'), addr: $('addrInput'), btn: $('analyzeBtn'),
+  latest: $('loadLatestBtn'), status: $('status'), net: $('netbadge'),
+  ph: $('resultPlaceholder'), body: $('resultBody'),
+  wdot: $('wdot'), wlabel: $('walletLabel'), waddr: $('walletAddr'),
+  clink: $('contractLink'),
+};
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+el.clink.textContent = CONTRACT;
+el.clink.href = EXPLORER_CONTRACT + CONTRACT;
+
+let client = null;
+let wallet = null;   // { pk, address, account }
+
+/* ---------- network ---------- */
+async function initClient(){
+  el.net.classList.remove('err');
+  el.net.textContent = 'connecting to Studionet…';
+  try {
+    client = SDK.createClient({ chain: SDK.studionet });
+    const info = await client.readContract({
+      address: CONTRACT, functionName: 'get_contract_info', args: [] });
+    const d = JSON.parse(info);
+    if (d.name !== 'TokenScope') throw new Error('unexpected contract at address');
+    el.net.textContent = 'Studionet · connected · taxonomy v' + (d.taxonomy_version || '1.0');
+  } catch (e){
+    el.net.classList.add('err');
+    el.net.textContent = 'network unreachable';
+    console.warn('initClient failed', e);
+  }
+}
+
+/* ---------- wallet (burner, localStorage) ---------- */
+const WKEY = 'tokenscope_wallet';
+function loadWallet(){
+  try {
+    const raw = localStorage.getItem(WKEY);
+    if (!raw) return null;
+    const d = JSON.parse(raw);
+    if (!d || !d.pk) return null;
+    const account = SDK.createAccount(d.pk);
+    return { pk: d.pk, address: account.address, account };
+  } catch { return null; }
+}
+function ensureWallet(){
+  if (wallet) return wallet;
+  wallet = loadWallet();
+  if (!wallet){
+    const pk = SDK.generatePrivateKey();
+    const account = SDK.createAccount(pk);
+    wallet = { pk, address: account.address, account };
+    localStorage.setItem(WKEY, JSON.stringify({ pk }));
+  }
+  renderWallet(true);
+  return wallet;
+}
+function renderWallet(funded){
+  if (!wallet){ el.wdot.classList.add('off'); el.wlabel.textContent = 'No burner wallet — created on first analysis'; el.waddr.textContent=''; return; }
+  el.wdot.classList.remove('off');
+  el.wlabel.textContent = 'Burner wallet ' + (funded ? '· funded' : '');
+  el.waddr.textContent = wallet.address;
+}
+async function fundIfNeeded(){
+  const w = ensureWallet();
+  try {
+    await client.request({ method: 'sim_fundAccount', params: [w.address, 5e18] });
+    renderWallet(true);
+  } catch (e){ console.warn('fund', e); }
+  return w;
+}
+
+/* ---------- input validation (client-side pre-check only; the
+   contract re-validates deterministically) ---------- */
+function validateInputs(){
+  const chain = el.chain.value.trim();
+  const addr = el.addr.value.trim();
+  let ok = true;
+  if (!/^[1-9][0-9]{0,9}$/.test(chain)){ el.chain.classList.add('invalid'); ok = false; }
+  else el.chain.classList.remove('invalid');
+  if (!/^0[xX][0-9a-fA-F]{40}$/.test(addr)){ el.addr.classList.add('invalid'); ok = false; }
+  else el.addr.classList.remove('invalid');
+  return ok ? { chain, addr: addr.toLowerCase() } : null;
+}
+
+/* ---------- status box ---------- */
+function setStatus(kind, html){
+  el.status.className = 'status show ' + (kind || '');
+  el.status.innerHTML = html;
+}
+
+/* ---------- tx lifecycle (FINALIZED + execution check) ---------- */
+const TX_FINAL_WAIT_MS = 8 * 60 * 1000;
+const TERMINAL_NOT_FINAL = ['UNDETERMINED','CANCELED','LEADER_TIMEOUT','VALIDATORS_TIMEOUT'];
+
+function txStatusName(r){
+  let s = r && r.status;
+  if (s === undefined || s === null) return '';
+  s = String(s);
+  if (/^\d+$/.test(s)){
+    const names = {0:'UNINITIALIZED',1:'PENDING',2:'PROPOSING',3:'COMMITTING',4:'REVEALING',5:'ACCEPTED',6:'UNDETERMINED',7:'FINALIZED',8:'CANCELED',9:'APPEAL_REVEALING',10:'APPEAL_COMMITTING',11:'READY_TO_FINALIZE',12:'VALIDATORS_TIMEOUT',13:'LEADER_TIMEOUT'};
+    s = names[Number(s)] || s;
+  }
+  return s;
+}
+async function fetchReceipt(txHash){
+  try { return await client.getTransactionReceipt({ hash: txHash }); }
+  catch (e){ if (!/not ?found/i.test(String(e.message||e))) throw e; return null; }
+}
+function receiptExecutionError(receipt, label){
+  const lead = Array.isArray(receipt?.consensus_data?.leader_receipt)
+    ? receipt.consensus_data.leader_receipt[0]
+    : null;
+  if (!lead) return null;
+  if (lead.execution_result === 'FAILURE' || lead.execution_result === 'ERROR'){
+    const stderr = String(lead.genvm_result?.stderr || '');
+    const contractErr = (stderr.match(/AssertionError: (.+)/) || [])[1];
+    return new Error(contractErr ? (label||'tx') + ' rejected: ' + contractErr
+                                  : (label||'tx') + ' reached consensus but reverted on chain');
+  }
+  return null;
+}
+function txReturnString(receipt){
+  // analyze() returns the report_id string — extract from the leader
+  // receipt payload (readable calldata return).
+  try {
+    const lead = Array.isArray(receipt?.consensus_data?.leader_receipt)
+      ? receipt.consensus_data.leader_receipt[0] : null;
+    const payload = lead?.result?.payload;
+    if (payload && typeof payload.readable === 'string') return payload.readable;
+  } catch {}
+  return null;
+}
+async function sendWrite(fn, args, label){
+  const w = await fundIfNeeded();
+  const txHash = await client.writeContract({
+    address: CONTRACT, functionName: fn, args, account: w.account });
+  setStatus('busy', 'Transaction submitted: <a href="'+EXPLORER_TX+txHash+'" target="_blank" rel="noopener">'+txHash.slice(0,22)+'…</a> — waiting for consensus (typically 1–3 min). This page shows real transaction states; nothing is displayed until the chain finalizes.');
+  let receipt = null;
+  try {
+    receipt = await Promise.race([
+      client.waitForTransactionReceipt({ hash: txHash, status: SDK.TransactionStatus.FINALIZED, interval: 5000, retries: 80 }),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('TX_FINAL_WAIT_TIMEOUT')), TX_FINAL_WAIT_MS)),
+    ]);
+  } catch (e){
+    const msg = String(e.message || e);
+    if (!/TX_FINAL_WAIT_TIMEOUT/.test(msg)) throw e;
+    setStatus('busy', 'Receipt wait timed out — polling the transaction until FINALIZED…');
+    const deadline = Date.now() + TX_FINAL_WAIT_MS;
+    while (Date.now() < deadline){
+      let r = null; try { r = await fetchReceipt(txHash); } catch {}
+      const st = txStatusName(r);
+      if (st === 'FINALIZED'){ receipt = r; break; }
+      if (TERMINAL_NOT_FINAL.includes(st)) throw new Error(label + ' ended in consensus status ' + st + ' — nothing was committed.');
+      await new Promise(res => setTimeout(res, 10000));
+    }
+    if (!receipt) throw new Error('Could not confirm FINALIZED for ' + label + ' — check <a href="'+EXPLORER_TX+txHash+'">the tx on the explorer</a>.');
+  }
+  const execErr = receiptExecutionError(receipt, label);
+  if (execErr) throw execErr;
+  return { txHash, receipt };
+}
+
+/* ---------- reads ---------- */
+async function readContract(fn, args, account){
+  const params = { address: CONTRACT, functionName: fn, args: args || [] };
+  if (account) params.account = account;
+  const out = await client.readContract(params);
+  return out;
+}
+async function readReportFor(chain, addr){
+  const raw = await readContract('get_latest_for', [chain, addr], wallet ? wallet.account : undefined);
+  return JSON.parse(raw);
+}
+async function readReportById(rid){
+  const raw = await readContract('get_report', [rid], wallet ? wallet.account : undefined);
+  return JSON.parse(raw);
+}
+
+/* ---------- render ---------- */
+const CAP_LABELS = {
+  ownership_detected:['Ownership / admin authority','An owner or single privileged authority exists in the verified artifacts.'],
+  ownership_transferable:['Transferable ownership','Ownership can be moved to another address.'],
+  ownership_renounceable:['Renounceable ownership','Ownership can be renounced, making privileged functions inaccessible.'],
+  role_based_admin:['Role-based administration','AccessControl-style roles with role-admin relationships.'],
+  mint:['Mint capability','A privileged path can increase token supply.'],
+  burn:['Burn capability','Supply can be destroyed (by holders or a privileged party).'],
+  supply_cap:['Supply cap evidence','A hard maximum supply is enforced by the code.'],
+  pause:['Pause transfers','A privileged party can pause/unpause transfers.'],
+  blacklist:['Blacklist','Addresses can be blocked from transferring.'],
+  whitelist:['Whitelist / allowlist','An allowlist gates transfers.'],
+  forced_transfer:['Forced transfer','A privileged party can move tokens between arbitrary addresses without holder approval.'],
+  fee_control:['Configurable fees','Transfer/buy/sell fee rate, recipient, or on/off state can be changed by a privileged party.'],
+  upgradeability:['Upgradeability','The implementation can be replaced (UUPS/transparent/beacon style).'],
+  upgrade_admin:['Upgrade admin','A specific role can perform upgrades.'],
+  balance_override:['Arbitrary balance override','A privileged party can set arbitrary address balances directly.'],
+  rescue_assets:['Rescue / sweep assets','A privileged party can rescue arbitrary tokens held by the contract.'],
+  eth_withdraw:['Native-asset withdrawal','A privileged party can withdraw native ETH from the contract.'],
+  arbitrary_allowance_edit:['Privileged allowance edits','A privileged path can modify allowances between arbitrary addresses.'],
+};
+
+function badgeFor(status){
+  const map = {
+    DETECTED:['b-det','DETECTED'], NOT_DETECTED:['b-nd','NOT DETECTED'],
+    UNCERTAIN:['b-unc','UNCERTAIN'], NOT_APPLICABLE:['b-nd','N/A'],
+    UNAVAILABLE:['b-una','UNAVAILABLE'],
+  };
+  const m = map[status] || ['b-una', status];
+  return '<span class="badge '+m[0]+'">'+esc(m[1])+'</span>';
+}
+
+function renderReport(rep, txHash){
+  el.ph.classList.add('hidden');
+  el.body.classList.remove('hidden');
+  const fail = rep.failure;
+  const caps = rep.capabilities || {};
+  const counts = { DETECTED:0, NOT_DETECTED:0, UNCERTAIN:0, NOT_APPLICABLE:0, UNAVAILABLE:0 };
+  const rows = [];
+  for (const [cap, item] of Object.entries(caps)){
+    counts[item.status] = (counts[item.status]||0)+1;
+    const label = CAP_LABELS[cap] ? CAP_LABELS[cap][0] : cap;
+    const desc = CAP_LABELS[cap] ? CAP_LABELS[cap][1] : '';
+    const ev = (item.evidence||[]).map(e => esc(e.func) + ' <span style="opacity:.55">('+esc(e.ref)+')</span>').join(' · ');
+    rows.push(
+      '<div class="cap"><div class="row"><span class="id">'+esc(label)+'</span>'+badgeFor(item.status)+'</div>'+
+      (item.reason ? '<div class="why">'+esc(item.reason)+'</div>' : (desc ? '<div class="why">'+esc(desc)+'</div>' : ''))+
+      (ev ? '<div class="ev">evidence: '+ev+'</div>' : '')+
+      '</div>');
+  }
+  const sum = fail
+    ? '<div class="fail"><b>Analysis could not be completed.</b><br>stage: <span class="mono">'+esc(fail.stage)+'</span> · code: <span class="mono">'+esc(fail.error_code)+'</span><br>This is an explicit failure state, not a negative finding: no capability conclusions are drawn when the artifacts cannot be retrieved or analyzed.</div>'
+    : '<div class="summary">'+
+      '<div class="sumbox"><div class="k">Detected</div><div class="v" style="color:var(--ok)">'+(counts.DETECTED||0)+'</div></div>'+
+      '<div class="sumbox"><div class="k">Not detected</div><div class="v" style="color:var(--nd)">'+(counts.NOT_DETECTED||0)+'</div></div>'+
+      '<div class="sumbox"><div class="k">Uncertain</div><div class="v" style="color:var(--unc)">'+(counts.UNCERTAIN||0)+'</div></div>'+
+      '<div class="sumbox"><div class="k">N/A</div><div class="v" style="color:var(--nd)">'+(counts.NOT_APPLICABLE||0)+'</div></div>'+
+      '</div>';
+
+  const srcBadge = fail
+    ? badgeFor('UNAVAILABLE')
+    : (rep.source_status === 'EXACT_MATCH' ? '<span class="badge b-det">EXACT MATCH</span>'
+        : rep.source_status === 'PARTIAL_MATCH' ? '<span class="badge b-unc">PARTIAL MATCH</span>'
+        : '<span class="badge b-una">'+esc(rep.source_status||'?')+'</span>');
+
+  const anBadge = fail ? '' : (rep.analysis_status === 'COMPLETE'
+    ? '<span class="badge b-det">COMPLETE</span>'
+    : '<span class="badge b-unc">'+esc(rep.analysis_status)+'</span>');
+
+  el.body.innerHTML =
+    '<div class="meta-row">'+
+      '<span class="mono">'+esc(rep.chain_id)+':'+esc(rep.address)+'</span>'+
+      srcBadge + anBadge +
+      (rep.sources_present === false ? '<span class="badge b-unc">ABI-ONLY (weaker evidence)</span>' : '')+
+    '</div>'+
+    '<div class="meta-row">'+
+      (txHash ? '<span>tx: <a href="'+EXPLORER_TX+txHash+'" target="_blank" rel="noopener">'+txHash.slice(0,18)+'…</a></span>' : '')+
+      '<span>report: <span class="mono">'+esc(rep.report_id)+'</span></span>'+
+      '<span>Sourcify: <a href="'+esc(SOURCIFY_LINK(rep.chain_id, rep.address))+'" target="_blank" rel="noopener">verification record</a></span>'+
+      (rep.verified_at ? '<span>verified at: '+esc(rep.verified_at)+'</span>' : '')+
+    '</div>'+
+    sum +
+    (fail ? '' :
+      '<div class="legend">NOT DETECTED does not mean impossible · UNCERTAIN means available evidence was insufficient · statuses are consensus-verified; reason/evidence are leader-cited context grounded against the fetched artifacts</div>'+
+      '<div class="capgrid">'+rows.join('')+'</div>'+
+      '<details class="evd"><summary>What this report is and is not</summary><div class="inner">'+
+      '<p style="margin-bottom:8px">This capability matrix was produced by GenLayer consensus: independent validators each retrieved the contract\u2019s verified artifacts from Sourcify v2 and re-derived the classification; only the stable canonical fields (verification status, analysis status, capability statuses) were compared.</p>'+
+      '<p style="margin-bottom:8px">Evidence function names are grounded against the fetched artifacts — a capability is only DETECTED with at least one artifact-verified supporting function.</p>'+
+      '<p>TokenScope does not certify safety. Hidden, unverified, off-chain, or indirect behavior may exist that verified artifacts cannot show. This is a capability classification, not a security audit.</p>'+
+      '</div></details>');
+}
+
+/* ---------- actions ---------- */
+el.btn.addEventListener('click', async () => {
+  const v = validateInputs();
+  if (!v){ setStatus('err', 'Please enter a valid chain ID (e.g. 1) and a 0x… 40-hex contract address.'); return; }
+  if (!client){ setStatus('err','Network unreachable — please retry.'); return; }
+  el.btn.disabled = true;
+  try {
+    setStatus('busy','Validating input…');
+    const { txHash, receipt } = await sendWrite('analyze', [v.chain, v.addr], 'analyze');
+    setStatus('ok','Consensus reached — reading the stored report…');
+    let rid = txReturnString(receipt);
+    let rep = null;
+    if (rid){ try { rep = await readReportById(rid); } catch { rep = null; } }
+    if (!rep){ rep = await readReportFor(v.chain, v.addr); rid = rep.report_id; }
+    renderReport(rep, txHash);
+    setStatus('ok','Analysis stored on-chain. Report <span class="mono">'+esc(rid)+'</span> is now the latest for this target.');
+  } catch (e){
+    const msg = String(e.message || e);
+    setStatus('err', 'Analysis failed: '+esc(msg) + (msg.includes('consensus status') ? ' — no state was committed.' : ''));
+  } finally {
+    el.btn.disabled = false;
+  }
+});
+
+el.latest.addEventListener('click', async () => {
+  const v = validateInputs();
+  if (!v){ setStatus('err','Enter a valid chain ID and address first.'); return; }
+  if (!client){ setStatus('err','Network unreachable — please retry.'); return; }
+  el.latest.disabled = true;
+  try {
+    setStatus('busy','Reading the latest stored report for '+v.chain+':'+v.addr+'…');
+    const rep = await readReportFor(v.chain, v.addr);
+    if (rep.error){
+      setStatus('err', rep.error === 'none'
+        ? 'No stored report for this target yet — run an analysis first.'
+        : 'Invalid target.');
+      return;
+    }
+    renderReport(rep, null);
+    setStatus('ok','Loaded stored report <span class="mono">'+esc(rep.report_id)+'</span> (no new transaction needed).');
+  } catch (e){
+    setStatus('err','Read failed: '+esc(e.message||e));
+  } finally {
+    el.latest.disabled = false;
+  }
+});
+
+/* example chips */
+document.querySelectorAll('.chip').forEach(ch => {
+  ch.addEventListener('click', () => {
+    el.chain.value = ch.dataset.chain;
+    el.addr.value = ch.dataset.addr;
+    el.chain.classList.remove('invalid'); el.addr.classList.remove('invalid');
+  });
+});
+
+/* ---------- boot ---------- */
+(async () => {
+  wallet = loadWallet();
+  renderWallet(false);
+  await initClient();
+})();
+</script>
+</body>
+</html>
