@@ -1,4 +1,4 @@
-name: Deploy AgentProof dApp to GitHub Pages
+name: Deploy TokenScope dApp to GitHub Pages
 
 on:
   push:
